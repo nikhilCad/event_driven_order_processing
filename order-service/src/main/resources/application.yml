@@ -19,14 +19,6 @@ spring:
         enable.idempotence: true
         max.block.ms: 5000
         spring.json.add.type.headers: false
-    consumer:
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
-      properties:
-        spring.json.value.default.type: com.nikhil.orders.events.OrderCreatedEvent
-        spring.json.use.type.headers: false
-        spring.json.trusted.packages: com.nikhil.orders.events
 
 demo:
   fail-after-publish: false

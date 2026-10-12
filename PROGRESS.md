@@ -45,7 +45,7 @@ Learning project. The user is experienced in Java but NEW to system design, Kafk
 | 0 | Architecture & plan | Plan written; **awaiting user review/OK** |
 | 1 | Skeleton, infra, Order REST + JPA | Done |
 | 2 | First event, naive (break it) | Done |
-| 3 | Inventory service | In progress |
+| 3 | Inventory service | Implemented (awaiting Q&A) |
 | 4 | Payment + happy path E2E | Not started |
 | 5 | Transactional Outbox | Not started |
 | 6 | Idempotent consumers | Not started |
@@ -59,7 +59,7 @@ Learning project. The user is experienced in Java but NEW to system design, Kafk
 Statuses: Not started → In progress → Implemented (awaiting Q&A) → Done (user said next).
 
 ## Current state
-Steps 0–2 done and documented in `docs/steps/`. Step 3 (inventory service) in progress. Compose stack may be running (`docker compose down` to stop).
+Steps 0–2 done; Step 3 implemented and verified, awaiting user Q&A (append every question + answer to `docs/steps/step-03-inventory-service.md`). Start Step 4 only when the user says next. Compose stack may be running (`docker compose down` to stop).
 
 ## Per-step notes (append below as steps complete)
 <!-- Format: ### Step N — what was built, key files, gotchas hit, questions the user asked + answers worth keeping, open follow-ups -->
@@ -83,5 +83,12 @@ Steps 0–2 done and documented in `docs/steps/`. Step 3 (inventory service) in 
 - Test: `OrderApiIntegrationTest` now also starts Kafka (Testcontainers) and asserts the event arrives keyed by orderId. **Use `apache/kafka:4.0.0` in tests**: `apache/kafka:3.9.0` fails with Testcontainers 2.x ("advertised.listeners cannot use 0.0.0.0"). Compose still uses 3.9.0 (works; align later if desired).
 - Event envelope: only one event type so far, so no `eventType` discriminator yet — add when `orders.events` carries several types (Step 4/5).
 - Pitfalls to remember: no `ErrorHandlingDeserializer` yet → a poison message would loop the consumer (Step 8); topic auto-create avoided via `NewTopic`.
+
+### Step 3 — Inventory service (implemented, awaiting Q&A; full detail in `docs/steps/step-03-*.md`)
+- New module `inventory-service` (:8081): consumes `orders.events` (group `inventory-service`), atomic `UPDATE ... WHERE available >= qty` reservation, emits `StockReserved` / `StockReservationFailed` (reason INSUFFICIENT_STOCK | UNKNOWN_PRODUCT) to `inventory.events`; `PUT/GET /stock/{productId}` for demo data. Removed order-service's throwaway logger.
+- Verified: 50-way concurrent race → exactly 10 reserved of stock 10 (naive read-then-write experiment: 50 reserved, stock 5 = lost updates); e2e via Kafka; full `./gradlew test` green.
+- Break-it: kill -9 after DB commit, before offset commit → redelivery after session timeout (~45 s) → order reserved twice (stock decremented twice). **Deliberately not fixed** (Step 6). `reservations.order_id` is intentionally non-unique for this reason.
+- Gotchas: new group at `earliest` replays history; `kill -9` delays rebalance by the session timeout; both inventory events share one topic without a type discriminator (Step 4 must add).
+- Demo knob (remove later): `demo.processing-delay-ms` / env `DEMO_PROCESSING_DELAY_MS` in `OrderCreatedListener`. Order-service demo flags still present until Step 5.
 
 ## Open questions / follow-ups
