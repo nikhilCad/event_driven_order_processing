@@ -98,7 +98,8 @@ Review the diagrams with the user. Questions to provoke thought: why no shared D
 5. **Best practices / Pitfalls**
 6. **Break it** — deliberately cause the failure this step prevents; observe
 7. **Q&A floor** — agent STOPS, invites questions about the code; answers until user says "next"
-8. **Done criteria + update PROGRESS.md**
+8. **Step doc** — create/fill `docs/steps/step-NN-*.md` (incl. all user Q&A); update Obsidian notes
+9. **Done criteria + update PROGRESS.md**
 
 ---
 

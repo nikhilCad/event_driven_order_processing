@@ -9,6 +9,28 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      properties:
+        enable.idempotence: true
+        max.block.ms: 5000
+        spring.json.add.type.headers: false
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      properties:
+        spring.json.value.default.type: com.nikhil.orders.events.OrderCreatedEvent
+        spring.json.use.type.headers: false
+        spring.json.trusted.packages: com.nikhil.orders.events
+
+demo:
+  fail-after-publish: false
+  publish-after-commit: false
 
 management:
   endpoints:
