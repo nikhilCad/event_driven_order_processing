@@ -32,6 +32,7 @@ Learning project. The user is experienced in Java but NEW to system design, Kafk
 | Outbox relay | Polling first, Debezium later | Understand mechanics before CDC |
 | Kafka key | orderId | Per-order ordering |
 | Tests | Testcontainers | Real infra |
+| Base package / groupId | `com.nikhil.orders` | User's choice |
 
 ## Step status
 | Step | Title | Status |
@@ -59,4 +60,3 @@ Step 0 only: `PLAN.md` and this file exist. No code yet. Next action: user revie
 <!-- Format: ### Step N — what was built, key files, gotchas hit, questions the user asked + answers worth keeping, open follow-ups -->
 
 ## Open questions / follow-ups
-- Package base name / groupId (propose `com.example.orders` unless user prefers otherwise)
