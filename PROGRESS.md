@@ -14,19 +14,23 @@ Learning project. The user is experienced in Java but NEW to system design, Kafk
 6. **Update this file** at the end of each step (status table, notes, decisions, open questions).
 7. Code comments: minimal; only explain WHY when non-obvious (user's global rule). Teaching goes in chat and docs, not in code comments.
 8. Tests: test logic and behavior, not framework plumbing. Prefer Testcontainers for infra; with Jest-style mocks use requireActual where applicable (n/a for Java).
-9. Confirm before outward-facing/irreversible actions. No git repo yet — ask before `git init`/commits.
+9. **Notes:** after each step and each Q&A answer, update VERY short, precise notes (no verbosity) in `~/tsft_projects/personal/obsidian-notes/System Design/03 Java Spring 6 with Spring Boot 3 - Telusko/02 Springboot/` — `02 Spring Boot Notes (java_order).md`, `03 Kafka Notes (java_order).md` (Java notes there too if relevant). **Never blind-append:** read the file, put the note under the right numbered section/heading, merge with existing topics instead of duplicating, add a new section only when none fits, keep the Contents line current.
+10. Confirm before outward-facing/irreversible actions. Ask before commits.
 
 ## Environment facts (as of 2026-10-12)
 - Project dir: `/Users/nikhil.kadiyan/tsft_projects/personal/java_order`
 - Java 17 (OpenJDK 17.0.8), Docker 29.4.0 present. Local `gradle` is 6.8.3 (too old for Spring Boot 3, needs 7.5+/8) and `mvn` is not installed → always use the Gradle wrapper (`./gradlew`), generated via start.spring.io, never the system `gradle`.
-- Not a git repository (yet).
+- Git repo now exists; ask before committing.
+- Local Postgres already listens on host :5432 → our compose Postgres is mapped to **host port 5433**.
+- Gradle isolation (user request: nothing global): `gradle-wrapper.properties` uses `distributionBase=PROJECT`/`zipStoreBase=PROJECT` so the Gradle 9.8.1 binary lives in `.gradle/wrapper/dists/` (gitignored). Never touch `~/.gradle/wrapper/dists` (user's other projects). Dependency cache: optionally `export GRADLE_USER_HOME=$PWD/.gradle-home` (gitignored) to keep that local too. If the wrapper download times out, curl the zip from services.gradle.org, verify its sha256, and seed it at `.gradle/wrapper/dists/gradle-9.8.1-bin/<md5-base36 of URL>/`.
+- Docker Desktop must be running (Testcontainers + compose).
 
 ## Decisions made
 | Decision | Choice | Why |
 |---|---|---|
 | Saga style | Choreography | Simplest; orchestration is Step 12 stretch |
 | Build | Gradle (Kotlin DSL) multi-project + wrapper | User's choice; wrapper avoids old local Gradle |
-| Spring Boot | 3.x (Java 17) | Matches installed JDK |
+| Spring Boot | 4.1.1 (Java 17) | start.spring.io offers only 4.x now; 4.x modular starters (`starter-webmvc`, `starter-flyway`), Testcontainers 2.x, Jackson 3 |
 | Kafka | KRaft, no ZooKeeper | Modern, fewer containers |
 | DB | One Postgres container, 3 databases | Cheap but logically separated |
 | Outbox relay | Polling first, Debezium later | Understand mechanics before CDC |
@@ -38,7 +42,7 @@ Learning project. The user is experienced in Java but NEW to system design, Kafk
 | Step | Title | Status |
 |---|---|---|
 | 0 | Architecture & plan | Plan written; **awaiting user review/OK** |
-| 1 | Skeleton, infra, Order REST + JPA | Not started |
+| 1 | Skeleton, infra, Order REST + JPA | Implemented (awaiting Q&A) |
 | 2 | First event, naive (break it) | Not started |
 | 3 | Inventory service | Not started |
 | 4 | Payment + happy path E2E | Not started |
@@ -54,9 +58,17 @@ Learning project. The user is experienced in Java but NEW to system design, Kafk
 Statuses: Not started → In progress → Implemented (awaiting Q&A) → Done (user said next).
 
 ## Current state
-Step 0 only: `PLAN.md` and this file exist. No code yet. Next action: user reviews architecture, then agent begins Step 1 following the working agreement.
+Step 1 implemented and verified. Compose stack may still be running (`docker compose down` to stop). Next action: user Q&A on Step 1 code; start Step 2 only when the user says next.
 
 ## Per-step notes (append below as steps complete)
 <!-- Format: ### Step N — what was built, key files, gotchas hit, questions the user asked + answers worth keeping, open follow-ups -->
+
+### Step 1 — Skeleton, infra, Order REST + JPA (implemented, awaiting Q&A)
+- Built: Gradle multi-project (only `order-service` included for now; other modules added when first used), `docker-compose.yml` (Postgres 16.4 on 5433 with init.sql creating orders_db/inventory_db/payment_db, Kafka 3.9.0 KRaft with INTERNAL `kafka:19092` / EXTERNAL `localhost:9092` listeners, both healthchecked), order-service (`POST /orders`, `GET /orders/{id}`, Flyway `V1__create_orders.sql`, `ddl-auto=validate`, `open-in-view=false`, ProblemDetail 404), Testcontainers integration test `OrderApiIntegrationTest` (passes).
+- Key files: `order-service/src/main/java/com/nikhil/orders/order/{domain,web}`, `order-service/src/main/resources/{application.yml,db/migration}`.
+- Verified manually: 201 + PENDING row in orders_db; 400 on invalid input.
+- Break-it result: Postgres stopped → POST returns 500 after ~30s (Hikari `connectionTimeout` default), recovers automatically after restart. Lesson: fail fast (shorter timeout, map to 503) — not done yet, candidate for hardening.
+- Gotcha hit: host Postgres on 5432 silently captured the connection ("role app does not exist") — the classic port-clash pitfall.
+- Test run (`./gradlew :order-service:test`) needs Docker running.
 
 ## Open questions / follow-ups

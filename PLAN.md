@@ -75,7 +75,7 @@ order-service      inventory-service        payment-service         order-servic
 - **At-least-once delivery** is the realistic guarantee → duplicates WILL happen → consumers must be idempotent.
 - **Outbox over "write DB then publish"** → the dual-write problem (see Step 2/5).
 - **One Postgres container, three databases** → cheap locally, still logically separate (no cross-DB joins/FKs, ever).
-- **Java 17 + Spring Boot 3.x, Gradle (Kotlin DSL) multi-project build** (Gradle wrapper; local `gradle` 6.8.3 is too old). Docker is available.
+- **Java 17 + Spring Boot 4.x, Gradle (Kotlin DSL) multi-project build** (Gradle wrapper; local `gradle` 6.8.3 is too old). Docker is available.
 - **Testcontainers** for integration tests (real Kafka/Postgres, no mocks of infrastructure).
 - **Kafka mode: KRaft** (no ZooKeeper).
 
